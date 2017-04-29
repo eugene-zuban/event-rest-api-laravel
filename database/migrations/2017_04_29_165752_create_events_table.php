@@ -19,8 +19,8 @@ class CreateEventsTable extends Migration
             $table->dateTime('date');
             $table->integer('impact')->default(0);
             $table->string('instrument')->default('');
-            $table->double('actual')->nullable();
-            $table->double('forecast')->nullable();
+            $table->double('actual', 15, 6)->nullable();
+            $table->double('forecast', 15, 6)->nullable();
             $table->timestamps();
         });
     }
