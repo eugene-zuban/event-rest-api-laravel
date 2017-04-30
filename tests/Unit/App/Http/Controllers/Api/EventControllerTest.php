@@ -6,6 +6,7 @@ use App\Event;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class EventControllerTest extends TestCase
@@ -30,7 +31,7 @@ class EventControllerTest extends TestCase
     }
 
     /**
-     * Test that GET request returns all events from the DB.
+     * Test that GET request returns events from the DB.
      */
     public function testItGetsEventsUsingApiEndpoint()
     {
@@ -38,22 +39,36 @@ class EventControllerTest extends TestCase
         $firstEvent = factory(Event::class)->create();
         $secondEvent = factory(Event::class)->create();
 
-        // Use API for getting all the events in JSON format
+        // Use API for getting all events
         $response = $this->json('GET', 'api/events');
-        $response->assertStatus(200);
 
-        if (($returnedEvents = count($response->json())) === 2) {
-            // if events table was empty, we received only our created events
-            // so we can check that we got them all
-            $response->assertJson([
-                ['title' => $firstEvent->title],
-                ['title' => $secondEvent->title],
-            ]);
-        } else {
-            // if events table was not empty before this test,
-            // we just check that we received more than two elements
-            $this->assertTrue($returnedEvents > 2);
-        }
+        // Check that our new events have been returned using API
+        $returnedTitles = Collection::make($response->json())->pluck('title');
+        $this->assertTrue($returnedTitles->contains($firstEvent->title));
+        $this->assertTrue($returnedTitles->contains($secondEvent->title));
+    }
+
+    public function testThatImpactFilterWorksForGetEventsApiEndpoint()
+    {
+        $event = [
+            'title' => 'Event with impact: 2200',
+            'date' => Carbon::now('UTC')->toIso8601String(),
+            'impact' => 2200,
+            'instrument' => 'direct',
+            'actual' => 316529122.69859,
+            'forecast' => 1813.516529,
+        ];
+
+        $postResponse = $this->json('POST', 'api/events', $event);
+        $postResponse->assertStatus(201);
+
+        $getResponse = $this->json('GET', 'api/events', ['impact' => '2200']);
+
+
+        $getResponse->assertStatus(200);
+
+        $returnedEvents = Collection::make($getResponse->json());
+        $this->assertTrue($returnedEvents->count() === 1);
     }
 
     /**
