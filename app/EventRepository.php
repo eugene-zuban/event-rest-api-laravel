@@ -2,8 +2,6 @@
 
 namespace App;
 
-use Illuminate\Database\Eloquent\Collection;
-
 class EventRepository
 {
     /**
@@ -16,7 +14,7 @@ class EventRepository
 
     /**
      * @param int $id
-     * @return Collection
+     * @return Event
      */
     public function getEventById($id)
     {
@@ -36,8 +34,6 @@ class EventRepository
     }
 
     /**
-     * Update Event specified by id
-     *
      * @param int $id
      * @param array $eventData
      * @return bool
@@ -50,9 +46,7 @@ class EventRepository
     }
 
     /**
-     * Delete event by its id.
-     *
-     * @param $id
+     * @param int $id
      */
     public function deleteEventById($id)
     {
@@ -67,12 +61,12 @@ class EventRepository
      */
     protected function fillEventWithDataFromArray(Event $event, $eventData)
     {
-        $event->setTitle($eventData->title);
-        $event->setDate($eventData->date);
-        $event->setImpact($eventData->impact);
-        $event->setInstrument($eventData->instrument);
-        $event->setActual($eventData->actual);
-        $event->setForecast($eventData->forecast);
+        $event->setTitle($eventData['title']);
+        $event->setDate($eventData['date']);
+        $event->setImpact($eventData['impact'] ?? 0);
+        $event->setInstrument($eventData['instrument'] ?? '');
+        $event->setActual($eventData['actual'] ?? 0);
+        $event->setForecast($eventData['forecast'] ?? 0);
 
         return $event;
     }

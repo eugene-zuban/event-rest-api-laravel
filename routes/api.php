@@ -10,6 +10,6 @@ Route::group(['namespace' => 'Api', 'middleware' => ['api']], function () {
 
     Route::put('/events/{id}', ['uses' => 'EventsController@update']);
 
-    Route::delete('/events/{id}', ['uses' => 'EventsController@delete'])
+    Route::delete('/events/{id}', ['uses' => 'EventsController@destroy'])
         ->where('id', '[0-9]+');
 });
