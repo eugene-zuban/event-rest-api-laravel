@@ -2,14 +2,19 @@
 
 namespace App;
 
+use Illuminate\Database\Eloquent\Collection;
+
 class EventRepository
 {
     /**
-     * @return \Illuminate\Database\Eloquent\Collection|static[]
+     * Return events with respect to filters.
+     *
+     * @param array $whereFilters
+     * @return Collection
      */
-    public function getAllEvents()
+    public function getAllEventsUsingFilters($whereFilters)
     {
-        return Event::all();
+        return Event::where($whereFilters)->get();
     }
 
     /**

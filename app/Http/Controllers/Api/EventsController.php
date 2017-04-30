@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Event;
 use App\EventRepository;
+use App\Http\Requests\Api\IndexEventRequest;
 use App\Http\Requests\Api\StoreUpdateEventRequest;
 use App\Transformers\EventTransformer;
 use App\Http\Controllers\Controller;
@@ -34,14 +35,17 @@ class EventsController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
+     * Return all events using filters from query parameters if any.
      *
-     * @return \Illuminate\Http\Response
+     * @param \App\Http\Requests\Api\IndexEventRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index()
+    public function index(IndexEventRequest $request)
     {
-        $allEvents =
-            $this->repository->getAllEvents()->map(function (Event $event) {
+        $filters = $request->getFiltersFromParameters();
+
+        $allEvents = $this->repository
+            ->getAllEventsUsingFilters($filters)->map(function (Event $event) {
                 return $this->transformer->transform($event);
             });
 
