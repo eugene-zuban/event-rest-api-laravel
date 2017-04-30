@@ -15,6 +15,7 @@ class EventTransformer
     public function transform(Event $event)
     {
         return [
+            'id' => $event->getId(),
             'title' => $event->getTitle(),
             'date' => $event->getIsoDate(),
             'impact' => $event->getImpact(),

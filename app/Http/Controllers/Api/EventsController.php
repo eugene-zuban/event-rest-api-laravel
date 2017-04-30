@@ -56,9 +56,12 @@ class EventsController extends Controller
      */
     public function store(StoreUpdateEventRequest $request)
     {
-        $this->repository->createNewEventFromArray($request->all());
+        $event = $this->repository->createNewEventFromArray($request->all());
 
-        return response()->json(['status' => 'Event has been created.'], 201);
+        return response()->json([
+            'status' => 'Event has been created.',
+            'created_event_id' => $event->getId(),
+        ], 201);
     }
 
     /**

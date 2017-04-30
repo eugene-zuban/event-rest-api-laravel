@@ -20,6 +20,14 @@ class Event extends Model
     protected $hidden = ['created_at', 'updated_at'];
 
     /**
+     * @return int
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    /**
      * @return string
      */
     public function getTitle()

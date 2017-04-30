@@ -22,15 +22,21 @@ class EventRepository
     }
 
     /**
-     * @param array $eventData
-     * @return bool
+     * Create and store new event using the specified data, and return it
+     *
+     * @param $eventData
+     * @return Event
      */
     public function createNewEventFromArray($eventData)
     {
-        return $this->fillEventWithDataFromArray(
+        $event = $this->fillEventWithDataFromArray(
             $this->getEmptyEvent(),
             $eventData
-        )->save();
+        );
+
+        $event->save();
+
+        return $event;
     }
 
     /**

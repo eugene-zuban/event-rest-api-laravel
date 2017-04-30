@@ -67,10 +67,10 @@ class EventControllerTest extends TestCase
         // create new event
         $response = $this->json('POST', 'api/events', $eventData);
         $response->assertStatus(201);
+        $createdEventId = $response->json()['created_event_id'];
 
         // get this event via API
-        $event = $response->json();
-        $response = $this->json('GET', "api/events/{$event['id']}");
+        $response = $this->json('GET', "api/events/{$createdEventId}");
         $response->assertStatus(200)->assertJson($eventData);
     }
 
