@@ -35,46 +35,40 @@ class EventsApiEndpointsTest extends TestCase
     public function testGetEvents()
     {
         // create two events and save them into the DB
-        $firstEvent = factory(Event::class)->create();
-        $secondEvent = factory(Event::class)->create();
+        $events = factory(Event::class, 2)->create();
 
         // Use API for getting all events
         $response = $this->json('GET', 'api/events');
 
         // Check that our new events have been returned using API
         $returnedTitles = Collection::make($response->json())->pluck('title');
-        $this->assertTrue($returnedTitles->contains($firstEvent->title));
-        $this->assertTrue($returnedTitles->contains($secondEvent->title));
+
+        $events->each(function (Event $event) use ($returnedTitles) {
+            $this->assertTrue($returnedTitles->contains($event->getTitle()));
+        });
     }
 
     /**
-     * Test that we receive only one event because or defaul equal operator
+     * Test that we receive only one event because or default equal operator
      */
     public function testEqualImpactParameter()
     {
-        $event = [
-            'title' => 'Event with impact: 3300',
-            'date' => Carbon::now('UTC')->toIso8601String(),
-            'impact' => 3300,
-            'instrument' => 'direct',
-            'actual' => 12.32,
-            'forecast' => 23.12,
-        ];
+        /** @var Event $event */
+        $event = factory(Event::class)->create();
 
-        // create new event using API
-        $postResponse = $this->json('POST', 'api/events', $event);
-        $postResponse->assertStatus(201);
+        // get this event using filters
+        $response = $this->json(
+            'GET', 'api/events', ['impact' => $event->getImpact()]
+        );
 
-        // get the event using filters
-        $getResponse = $this->json('GET', 'api/events', ['impact' => 3300]);
-        $getResponse->assertStatus(200);
+        $response->assertStatus(200);
 
         // check that we received correct event
-        $returnedEvents = Collection::make($getResponse->json());
+        $returnedEvents = Collection::make($response->json());
         $this->assertTrue($returnedEvents->count() === 1);
 
         $this->assertTrue(
-            $returnedEvents->pluck('title')->contains($event['title'])
+            $returnedEvents->pluck('title')->contains($event->getTitle())
         );
     }
 
@@ -86,27 +80,19 @@ class EventsApiEndpointsTest extends TestCase
      */
     public function testGreaterOrEqualImpactParameter()
     {
-        $event = [
-            'title' => 'Event with impact: 32',
-            'date' => Carbon::now('UTC')->toIso8601String(),
-            'impact' => 32,
-            'instrument' => 'direct',
-            'actual' => 12.32,
-            'forecast' => 23.12,
-        ];
-
-        // create new event using API
-        $postResponse = $this->json('POST', 'api/events', $event);
-        $postResponse->assertStatus(201);
+        $event = factory(Event::class)->create();
 
         // get the event using filters
-        $getResponse = $this->json('GET', 'api/events', ['impact' => '>=32']);
+        $getResponse = $this->json(
+            'GET', 'api/events', ['impact' => ">={$event->getImpact()}"]
+        );
+
         $getResponse->assertStatus(200);
 
         // check that we received correct event
         $returnedEvents = Collection::make($getResponse->json());
         $this->assertTrue(
-            $returnedEvents->pluck('title')->contains($event['title'])
+            $returnedEvents->pluck('title')->contains($event->getTitle())
         );
     }
 
@@ -118,59 +104,42 @@ class EventsApiEndpointsTest extends TestCase
      */
     public function testDateFromParameter()
     {
-        $firstEvent = [
-            'title' => 'Event for from date testing 1',
-            'date' => Carbon::now('UTC')->nextWeekday()->toIso8601String(),
-            'impact' => 0,
-            'instrument' => 'custom',
-            'actual' => 1.32,
-            'forecast' => 1.12,
+        // make 3 events
+        $events = factory(Event::class, 3)->make();
+
+        // make 3 different date times
+        $dateTimes = [
+            Carbon::now('UTC')->nextWeekday()->toIso8601String(),
+            Carbon::now('UTC')->toIso8601String(),
+            Carbon::now('UTC')->previousWeekday()->toIso8601String(),
         ];
 
-        $secondEvent = [
-            'title' => 'Event for from date testing 2',
-            'date' => Carbon::now('UTC')->toIso8601String(),
-            'impact' => 0,
-            'instrument' => 'custom',
-            'actual' => 1.32,
-            'forecast' => 1.12,
-        ];
-
-        $thirdEvent = [
-            'title' => 'Event for from date testing 3',
-            'date' => Carbon::now('UTC')->previousWeekday()->toIso8601String(),
-            'impact' => 0,
-            'instrument' => 'custom',
-            'actual' => 1.32,
-            'forecast' => 1.12,
-        ];
-
-        // post (create) new events
-        $events = Collection::make([$firstEvent, $secondEvent, $thirdEvent]);
-        $events->each(function ($event) {
-            $this->json('POST', 'api/events', $event);
+        // attach custom time to each event, and save it into the DB
+        $events->each(function (Event $event, $key) use ($dateTimes) {
+            $event->setDate($dateTimes[$key]);
+            $event->save();
         });
 
-        // get events using
-        $getResponse = $this->json(
+        // get events using API with from_date parameter
+        $response = $this->json(
             'GET',
             'api/events',
             ['from_date' => Carbon::now('UTC')->toDateTimeString()]
         );
 
         // check that we received correct events
-        $returnedEvents = Collection::make($getResponse->json());
+        $returnedEvents = Collection::make($response->json());
 
         $this->assertTrue(
-            $returnedEvents->pluck('title')->contains($firstEvent['title'])
+            $returnedEvents->pluck('title')->contains($events[0]['title'])
         );
 
         $this->assertTrue(
-            $returnedEvents->pluck('title')->contains($secondEvent['title'])
+            $returnedEvents->pluck('title')->contains($events[1]['title'])
         );
 
         $this->assertFalse(
-            $returnedEvents->pluck('title')->contains($thirdEvent['title'])
+            $returnedEvents->pluck('title')->contains($events[2]['title'])
         );
     }
 
@@ -179,9 +148,21 @@ class EventsApiEndpointsTest extends TestCase
      */
     public function testThatWeCanUpdateEvent()
     {
+        /** @var Event $event */
         $event = factory(Event::class)->create();
 
-        $response = $this->json('PUT', "api/events{$event->id}");
+        // update the title and push updated event to the server
+        $event->setTitle('New Updated Title');
+
+        $response =
+            $this->json('PUT', "api/events/{$event->id}", $event->toArray());
+        $response->assertStatus(200);
+
+        // get the updated event, and check that it has been updated
+        $response = $this->json('GET', "api/events/{$event->id}");
+        $response->assertStatus(200);
+        $returnedEvent = $response->json();
+        $this->assertEquals($event->getTitle(), $returnedEvent['title']);
     }
 
     /**
