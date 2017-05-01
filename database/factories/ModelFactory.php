@@ -22,3 +22,17 @@ $factory->define(App\User::class, function (Faker\Generator $faker) {
         'remember_token' => str_random(10),
     ];
 });
+
+/** @var \Illuminate\Database\Eloquent\Factory $factory */
+$factory->define(App\Event::class, function (Faker\Generator $faker) {
+    return [
+        'title' => $faker->company,
+        'date' => $faker
+          ->dateTimeBetween('now', '+1 year')
+          ->format('Y-m-d H:i:s'),
+        'impact' => $faker->randomNumber(),
+        'instrument' => $faker->word,
+        'actual' => $faker->randomFloat(6),
+        'forecast' => $faker->randomFloat(6),
+    ];
+});

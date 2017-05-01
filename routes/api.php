@@ -1,18 +1,15 @@
 <?php
 
-use Illuminate\Http\Request;
+Route::group(['namespace' => 'Api', 'middleware' => ['api']], function () {
+    Route::get('/events', ['uses' => 'EventsController@index']);
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+    Route::get('/events/{id}', ['uses' => 'EventsController@show'])
+        ->where('id', '[0-9]+');
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+    Route::post('/events', ['uses' => 'EventsController@store']);
+
+    Route::put('/events/{id}', ['uses' => 'EventsController@update']);
+
+    Route::delete('/events/{id}', ['uses' => 'EventsController@destroy'])
+        ->where('id', '[0-9]+');
 });
